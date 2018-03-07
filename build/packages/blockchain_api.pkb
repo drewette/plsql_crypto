@@ -61,14 +61,37 @@ CREATE OR REPLACE PACKAGE BODY blockchain_api AS
 
     END;
 
-    PROCEDURE calculatehash
+
+    PROCEDURE getlatestblock
         IS
     BEGIN
-        gv_hash := sha256.encrypt(gv_previoushash
-        || gv_timestamp
-        || gv_transaction
-        || gv_nonce);
+        FOR r IN (
+            SELECT
+                id,
+                previoushash,
+                timestamp,
+                transaction
+            FROM
+                (
+                    SELECT
+                        *
+                    FROM
+                        blockchain
+                    ORDER BY
+                        id DESC
+                )
+            WHERE
+                ROWNUM = 1
+            ORDER BY
+                ROWNUM DESC
+        ) LOOP
+            gv_id := r.id;
+            gv_previoushash := r.previoushash;
+            gv_timestamp := r.timestamp;
+            gv_transaction := r.transaction;
+        END LOOP;
     END;
+
 
     PROCEDURE mineblock IS
         l_leading_zeros   VARCHAR2(100);
@@ -104,35 +127,15 @@ CREATE OR REPLACE PACKAGE BODY blockchain_api AS
 
     END;
 
-    PROCEDURE getlatestblock
+    PROCEDURE calculatehash
         IS
     BEGIN
-        FOR r IN (
-            SELECT
-                id,
-                previoushash,
-                timestamp,
-                transaction
-            FROM
-                (
-                    SELECT
-                        *
-                    FROM
-                        blockchain
-                    ORDER BY
-                        id DESC
-                )
-            WHERE
-                ROWNUM = 1
-            ORDER BY
-                ROWNUM DESC
-        ) LOOP
-            gv_id := r.id;
-            gv_previoushash := r.previoushash;
-            gv_timestamp := r.timestamp;
-            gv_transaction := r.transaction;
-        END LOOP;
+        gv_hash := sha256.encrypt(gv_previoushash
+        || gv_timestamp
+        || gv_transaction
+        || gv_nonce);
     END;
+
 
     FUNCTION ischainvalid RETURN BOOLEAN IS
         l_result       BOOLEAN := false;
@@ -170,7 +173,7 @@ CREATE OR REPLACE PACKAGE BODY blockchain_api AS
         RETURN l_result;
     END;
 
-    PROCEDURE isentirechainvalid IS
+    PROCEDURE isEntireChainValid IS
 
         l_id             blockchain.id%TYPE;
         l_previoushash   blockchain.previoushash%TYPE;

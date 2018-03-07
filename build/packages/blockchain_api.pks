@@ -21,15 +21,14 @@ CREATE OR REPLACE PACKAGE blockchain_api as
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-l_difficulty constant number := 4;
-
 procedure initialise;
 
-procedure calculateHash;
+procedure getLatestBlock;
 
 procedure mineBlock;
 
-procedure getLatestBlock;
+procedure calculateHash;
+
 
 function isChainValid
 return boolean;
